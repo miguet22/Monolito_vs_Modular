@@ -57,7 +57,7 @@ Tp2.1_devops/
 
 ## ⚡ Cómo Ejecutar en Local con Docker
 
-Puedes ejecutar el proyecto de forma individual o ambos escenarios en paralelo (tienen puertos asignados diferentes para no colisionar):
+Se puede ejecutar el proyecto de forma individual o ambos escenarios en paralelo (tienen puertos asignados diferentes para no colisionar):
 
 ### Opción A: Comparación Simultánea (Recomendada)
 Para abrir ambos en pestañas contiguas del navegador y comparar en tiempo real:
@@ -65,7 +65,7 @@ Para abrir ambos en pestañas contiguas del navegador y comparar en tiempo real:
 ```bash
 docker compose up --build
 ```
-*(O ejecuta el script `run-all.bat` en Windows)*
+*(O ejecutar el script `run-all.bat` en Windows)*
 
 - **Monolito Modular:** [http://localhost:3000](http://localhost:3000)
 - **Microservicios:** [http://localhost:4000](http://localhost:4000)
@@ -77,9 +77,9 @@ docker compose up --build
 ```bash
 docker compose -f docker-compose.monolith.yml up --build
 ```
-*(O ejecuta `run-monolith.bat`)*
+*(O ejecutar `run-monolith.bat`)*
 
-Abre en tu navegador: [http://localhost:3000](http://localhost:3000)
+Abrir en tu navegador: [http://localhost:3000](http://localhost:3000)
 
 ---
 
@@ -88,19 +88,19 @@ Abre en tu navegador: [http://localhost:3000](http://localhost:3000)
 ```bash
 docker compose -f docker-compose.microservices.yml up --build
 ```
-*(O ejecuta `run-microservices.bat`)*
+*(O ejecutar `run-microservices.bat`)*
 
-Abre en tu navegador: [http://localhost:4000](http://localhost:4000)
+Abrir en tu navegador: [http://localhost:4000](http://localhost:4000)
 
 ---
 
 ## 🧪 Paso a Paso para la Demo Práctica
 
 ### 1. Demostración en el Monolito Modular (`http://localhost:3000`)
-1. **Crear pedidos normales:** Llena el formulario y haz clic en *"Procesar Pedido en Monolito"*.
-   - **Observa la métrica de latencia:** es de **~0 ms a 5 ms** (la llamada entre módulos ocurre en la misma memoria RAM, sin red ni serialización).
+1. **Crear pedidos normales:** Llenar el formulario y hacer clic en *"Procesar Pedido en Monolito"*.
+   - **Observar la métrica de latencia:** es de **~0 ms a 5 ms** (la llamada entre módulos ocurre en la misma memoria RAM, sin red ni serialización).
 2. **Provocar la caída (Chaos Experiment):**
-   - Haz clic en el botón rojo: **"💥 Provocar Caída del Módulo de Notificaciones"**.
+   - Hacer clic en el botón rojo: **"💥 Provocar Caída del Módulo de Notificaciones"**.
 3. **Observar el impacto:**
    - Una excepción fatal no capturada dentro del submódulo de notificaciones tira abajo **todo el proceso Node.js**.
    - El contenedor pasa a estado **CAÍDO / Connection Refused**.
@@ -109,27 +109,24 @@ Abre en tu navegador: [http://localhost:4000](http://localhost:4000)
 ---
 
 ### 2. Demostración en Microservicios (`http://localhost:4000`)
-1. **Crear pedidos normales:** Llena el formulario y haz clic en *"Ejecutar Pedido a través de la Red"*.
-   - **Observa el costo de red:** La latencia sube a **~35 ms - 45 ms** (costo introducido por el viaje por red Docker Bridge, stack TCP/IP y serialización JSON).
+1. **Crear pedidos normales:** Llenar el formulario y hacer clic en *"Ejecutar Pedido a través de la Red"*.
+   - **Observar el costo de red:** La latencia sube a **~35 ms - 45 ms** (costo introducido por el viaje por red Docker Bridge, stack TCP/IP y serialización JSON).
 2. **Provocar la caída del microservicio separado:**
-   - Haz clic en el botón: **"💥 Simular Caída (HTTP 503)"** (o corre en consola `docker stop tp2-notification-service`).
+   - Hacer clic en el botón: **"💥 Simular Caída (HTTP 503)"** (o correr en consola `docker stop tp2-notification-service`).
    - El panel muestra que `Notification-Service` está **CAÍDO**, pero `Order-Service` permanece **ONLINE**.
 3. **Probar crear un nuevo pedido con el servicio caído:**
-   - Completa el formulario y envía un nuevo pedido.
+   - Completar el formulario y enviar un nuevo pedido.
    - **Observar el impacto:**
      - ¡El pedido **SE COMPLETA CON ÉXITO** (`COMPLETED - DEGRADADO`)!
      - El negocio no pierde la venta. Se activa el patrón de **Degradación Elegante (Graceful Degradation)**: el sistema captura el error de red / timeout y programa la notificación para reintento posterior.
 4. **Restaurar el servicio:**
-   - Haz clic en **"✨ Restaurar Servicio"** (o `docker start tp2-notification-service`).
+   - Hacer clic en **"✨ Restaurar Servicio"** (o `docker start tp2-notification-service`).
    - El sistema vuelve a operar en estado 100% saludable.
 
 ---
 
-## 📚 Respuestas a la Pregunta Guía
 
-El análisis teórico detallado se encuentra en el archivo [INFORME_TEORICO.md](teoria/INFORME_TEORICO.md) y [ARQUITECTURA.md](teoria/ARQUITECTURA.md).
-
-### Resumen ejecutivo:
+### Resumen
 
 1. **¿Cuándo conviene separar un módulo como servicio?**
    - **Escalabilidad asimétrica:** El módulo consume recursos desproporcionados (CPU/RAM) respecto al resto.
