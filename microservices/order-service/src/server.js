@@ -5,6 +5,7 @@ const path = require("path");
 const app = express();
 const PORT = process.env.PORT || 4000;
 const NOTIFICATION_SERVICE_URL = process.env.NOTIFICATION_SERVICE_URL || "http://notification-service:3001";
+const RETRY_INTERVAL_MS = Number(process.env.RETRY_INTERVAL_MS || 5000);
 
 app.use(cors());
 app.use(express.json());
@@ -13,6 +14,7 @@ app.use(express.static(path.join(__dirname, "public")));
 // Almacén de pedidos en memoria
 const ordersDatabase = [];
 let nextOrderId = 5001;
+let retryWorkerRunning = false;
 
 // Endpoint de salud que verifica este microservicio y sondea el servicio de notificaciones
 app.get("/api/health", async (req, res) => {
@@ -84,7 +86,7 @@ app.post("/api/orders", async (req, res) => {
     item,
     amount: Number(amount),
     createdAt,
-    status: "COMPLETED", // El pedido se concreta exitosamente
+    status: "COMPLETED", // Se confirma como completado si la notificación se envía
     architecture: "Microservicios (HTTP REST)",
     notification: null
   };
@@ -148,15 +150,19 @@ app.post("/api/orders", async (req, res) => {
       status: "DEGRADED_FAILED",
       channel: "HTTP REST API (Caído)",
       latencyMs: networkTimeMs,
+      retryAttempts: 0,
+      nextRetryAt: new Date(Date.now() + RETRY_INTERVAL_MS).toISOString(),
       error: err.cause?.code || err.message,
-      explanation: "El pedido se guardó con éxito. La notificación se encolará para reintento posterior."
+      explanation: "El pedido se guardó. Un worker volverá a intentar enviar la notificación automáticamente."
     };
+    // Solo cuenta como completado cuando el worker logre enviar la notificación.
+    newOrder.status = "PENDING_NOTIFICATION";
 
     ordersDatabase.push(newOrder);
 
     return res.status(201).json({
       success: true,
-      message: "Pedido creado exitosamente, pero el servicio de notificaciones está caído. Aislamiento de fallas en acción.",
+      message: "Pedido recibido y pendiente de completar hasta que pueda enviarse la notificación.",
       data: newOrder,
       degraded: true
     });
@@ -213,6 +219,67 @@ app.post("/api/chaos/crash", async (req, res) => {
     });
   }
 });
+
+// Worker de reintentos: revisa pedidos degradados y reenvía sus notificaciones
+// cuando el servicio remoto está disponible. El almacenamiento de esta demo es en memoria.
+async function retryPendingNotifications() {
+  if (retryWorkerRunning) return;
+  retryWorkerRunning = true;
+
+  try {
+    const pendingOrders = ordersDatabase.filter(
+      (order) => order.notification?.status === "DEGRADED_FAILED"
+    );
+    if (pendingOrders.length === 0) return;
+
+    const health = await fetch(`${NOTIFICATION_SERVICE_URL}/health`, {
+      signal: AbortSignal.timeout(1500)
+    });
+    if (!health.ok) return;
+
+    for (const order of pendingOrders) {
+      const notification = order.notification;
+      notification.retryAttempts = (notification.retryAttempts || 0) + 1;
+      notification.lastRetryAt = new Date().toISOString();
+
+      try {
+        const response = await fetch(`${NOTIFICATION_SERVICE_URL}/api/notify`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            orderId: order.id,
+            customer: order.customer,
+            item: order.item,
+            amount: order.amount
+          }),
+          signal: AbortSignal.timeout(2000)
+        });
+
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        const result = await response.json();
+        notification.status = "SENT";
+        order.status = "COMPLETED";
+        notification.channel = "HTTP REST API / Retry Worker";
+        notification.notificationId = result.notificationId;
+        notification.deliveredAt = result.deliveredAt;
+        notification.error = null;
+        notification.nextRetryAt = null;
+        console.log(`[RETRY-WORKER] Notificación de ${order.id} enviada en el reintento ${notification.retryAttempts}.`);
+      } catch (error) {
+        notification.error = error.cause?.code || error.message;
+        notification.nextRetryAt = new Date(Date.now() + RETRY_INTERVAL_MS).toISOString();
+        console.warn(`[RETRY-WORKER] ${order.id} continúa pendiente: ${notification.error}`);
+      }
+    }
+  } catch (error) {
+    // El servicio puede caer entre el healthcheck y el envío; se reintentará en el próximo ciclo.
+    console.warn(`[RETRY-WORKER] No se pudo consultar Notification-Service: ${error.message}`);
+  } finally {
+    retryWorkerRunning = false;
+  }
+}
+
+setInterval(retryPendingNotifications, RETRY_INTERVAL_MS);
 
 app.listen(PORT, () => {
   console.log(`====================================================`);

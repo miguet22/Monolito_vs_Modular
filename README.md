@@ -117,11 +117,13 @@ Abrir en tu navegador: [http://localhost:4000](http://localhost:4000)
 3. **Probar crear un nuevo pedido con el servicio caído:**
    - Completar el formulario y enviar un nuevo pedido.
    - **Observar el impacto:**
-     - ¡El pedido **SE COMPLETA CON ÉXITO** (`COMPLETED - DEGRADADO`)!
-     - El negocio no pierde la venta. Se activa el patrón de **Degradación Elegante (Graceful Degradation)**: el sistema captura el error de red / timeout y programa la notificación para reintento posterior.
+     - El pedido queda **PENDIENTE (DEGRADADO)**: aumenta el contador de degradados, pero todavía no el de pedidos completados.
+     - El worker reintenta la notificación cada 5 segundos. Cuando logra enviarla, el pedido pasa a `COMPLETED`, aumenta el contador de pedidos completados y deja de contar como degradado.
 4. **Restaurar el servicio:**
    - Hacer clic en **"✨ Restaurar Servicio"** (o `docker start tp2-notification-service`).
-   - El sistema vuelve a operar en estado 100% saludable.
+   - El worker reenvía las notificaciones pendientes en el siguiente ciclo y el dashboard refleja el nuevo estado.
+
+> **Alcance de la demo:** pedidos y pendientes viven en memoria. Si se reinicia `order-service`, se pierden. En producción se usaría una cola durable para conservar los mensajes ante reinicios. En esta demo, “completado” significa que el pedido también logró completar el paso de notificación.
 
 ---
 

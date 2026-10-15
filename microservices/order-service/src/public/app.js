@@ -40,7 +40,8 @@ async function fetchOrders() {
 }
 
 function renderOrders(orders) {
-  metricOrders.textContent = orders.length;
+  const completedCount = orders.filter(o => o.status === "COMPLETED").length;
+  metricOrders.textContent = completedCount;
   ordersCountBadge.textContent = `${orders.length} pedidos`;
 
   const degradedCount = orders.filter(o => o.notification && o.notification.status === "DEGRADED_FAILED").length;
@@ -72,12 +73,12 @@ function renderOrders(orders) {
 
     const statusBadgeHtml = isSuccess
       ? `<span class="badge-success">COMPLETADO</span>`
-      : `<span class="badge-warning">COMPLETADO (DEGRADADO)</span>`;
+      : `<span class="badge-warning">PENDIENTE (DEGRADADO)</span>`;
 
     const latencyDisplay = notif.latencyMs !== undefined ? `${notif.latencyMs} ms` : "N/A";
     const detailMsg = isSuccess
       ? `<span style="color: var(--text-muted);">Notificación ID: ${notif.notificationId || 'N/A'}</span>`
-      : `<span style="color: var(--accent-amber);">⚠️ Orden preservada &bull; Error: ${notif.error || 'Timeout'}</span>`;
+      : `<span style="color: var(--accent-amber);">⚠️ Pendiente de completar &bull; Reintentos: ${notif.retryAttempts || 0} &bull; Próximo intento automático</span>`;
 
     return `
       <tr>
@@ -118,7 +119,7 @@ orderForm.addEventListener("submit", async (e) => {
 
     if (json.degraded) {
       appendLog(`[PEDIDO ACEPTADO CON DEGRADACIÓN] ${json.data.id} creado en ${elapsed}ms`, "warn");
-      appendLog(`[RESILIENCIA] Notification Service falló (${json.data.notification.error}), pero el pedido fue guardado exitosamente.`, "warn");
+      appendLog(`[RESILIENCIA] Notification Service falló (${json.data.notification.error}); ${json.data.id} queda pendiente de completar.`, "warn");
     } else {
       appendLog(`[PEDIDO CREADO] ${json.data.id} completado. Latencia de red HTTP: ${json.data.notification.latencyMs}ms.`, "success");
     }
@@ -195,3 +196,4 @@ async function checkHealth() {
 // Iniciar sondeo
 fetchOrders();
 setInterval(checkHealth, 2000);
+setInterval(fetchOrders, 2000);

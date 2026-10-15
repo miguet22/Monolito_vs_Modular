@@ -75,7 +75,7 @@ graph TD
 - **Latencia de llamada entre servicios:** **30 ms - 50 ms** (stack TCP/IP, resolución de nombre de host, serialización/deserialización).
 - **Aislamiento de Fallos:** **Total**.
   - Si `notification-service` sufre una caída (HTTP 503, crash o contenedor detenido con `docker stop`), `order-service` sigue 100% operativo.
-  - Implementa el patrón **Graceful Degradation** (Degradación Elegante): la orden se confirma y almacena localmente, mientras que la notificación queda registrada en estado `DEGRADED_FAILED` para reintento posterior.
+  - Implementa **Graceful Degradation**: ante la caída, el pedido se conserva como `PENDING_NOTIFICATION` y la notificación queda en `DEGRADED_FAILED`. No se cuenta como completado hasta que el worker, que revisa cada 5 segundos, logra enviarla; entonces pasa a `COMPLETED`. El historial es en memoria y se pierde si se reinicia el servicio de pedidos.
 
 ---
 
