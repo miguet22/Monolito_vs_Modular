@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TP 2.1 DevOps - Monolito</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="container">
+    <!-- Top Navigation -->
+    <header class="top-nav">
+      <div class="brand">
+        <div class="brand-icon">🏛️</div>
+        <div>
+          <h1 class="brand-title">Sistema de Pedidos - Monolito</h1>
+          <p class="brand-subtitle">Módulos en el mismo proceso &bull; Puerto 3000</p>
+        </div>
+      </div>
+      <nav class="nav-links">
+        <a href="/" class="nav-btn active">🏛️ Monolito (:3000)</a>
+        <a href="http://localhost:4000" target="_blank" class="nav-btn external">🚀 Ir a Microservicios (:4000) ↗</a>
+      </nav>
+    </header>
+
+    <!-- Status Card -->
+    <section class="status-summary-card">
+      <div class="system-status" id="system-status-box">
+        <div class="status-dot" id="status-dot"></div>
+        <span id="status-text">Contenedor En Línea (PID: ...)</span>
+      </div>
+    </section>
+
+    <!-- Main Grid -->
+    <div class="dashboard-grid">
+      <!-- Panel Izquierdo: Crear Pedido y Chaos -->
+      <section class="panel-card">
+        <div class="panel-header">
+          <h3 class="panel-title">🛒 Crear Nuevo Pedido</h3>
+        </div>
+
+        <form id="order-form">
+          <div class="form-group">
+            <label class="form-label">Nombre del Cliente</label>
+            <input type="text" id="customer" class="form-input" required value="Juan Pérez">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Producto / Servicio</label>
+            <input type="text" id="item" class="form-input" required value="Suscripción Pro Anual">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Monto ($ USD)</label>
+            <input type="number" id="amount" class="form-input" required value="120" min="1">
+          </div>
+          <button type="submit" class="btn-primary" id="btn-submit">
+            Procesar Pedido
+          </button>
+        </form>
+
+        <!-- Chaos Engineering -->
+        <div class="chaos-card">
+          <h4 class="chaos-title">⚠️ Simulación de Falla</h4>
+          <p class="chaos-desc">
+            Provoca un error fatal en el submódulo de notificaciones para observar su impacto en el contenedor.
+          </p>
+          <button type="button" class="btn-danger" id="btn-crash">
+            💥 Provocar Caída del Módulo de Notificaciones
+          </button>
+        </div>
+      </section>
+
+      <!-- Panel Derecho: Métricas y Log -->
+      <section class="panel-card">
+        <div class="panel-header">
+          <h3 class="panel-title">📊 Métricas del Servidor</h3>
+          <span style="font-size: 0.8rem; color: var(--text-muted);" id="orders-count-badge">0 pedidos</span>
+        </div>
+
+        <div class="metrics-row">
+          <div class="metric-box">
+            <div class="metric-value" id="metric-latency">0 ms</div>
+            <div class="metric-label">Latencia Módulo</div>
+          </div>
+          <div class="metric-box">
+            <div class="metric-value" id="metric-orders">0</div>
+            <div class="metric-label">Total Pedidos</div>
+          </div>
+          <div class="metric-box">
+            <div class="metric-value" id="metric-health">100%</div>
+            <div class="metric-label">Disponibilidad</div>
+          </div>
+        </div>
+
+        <h4 style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 0.5rem; text-transform: uppercase;">
+          Terminal de Eventos
+        </h4>
+        <div class="log-terminal" id="log-terminal">
+          <div class="log-entry info">[SISTEMA] Servidor monolítico iniciado correctamente.</div>
+        </div>
+      </section>
+    </div>
+
+    <!-- Historial de Pedidos -->
+    <section class="panel-card">
+      <div class="panel-header">
+        <h3 class="panel-title">📋 Registro de Pedidos Procesados</h3>
+      </div>
+      <div class="orders-table-wrapper">
+        <table class="orders-table">
+          <thead>
+            <tr>
+              <th>ID Pedido</th>
+              <th>Cliente</th>
+              <th>Producto</th>
+              <th>Monto</th>
+              <th>Estado Pedido</th>
+              <th>Notificación</th>
+              <th>Latencia Notif.</th>
+              <th>Fecha</th>
+            </tr>
+          </thead>
+          <tbody id="orders-tbody">
+            <tr>
+              <td colspan="8" style="text-align: center; color: var(--text-muted); padding: 1.5rem;">
+                Aún no hay pedidos registrados. Crea uno arriba para comenzar.
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>

@@ -1,0 +1,12 @@
+services:
+  monolith:
+    build:
+      context: ./monolith
+      dockerfile: Dockerfile
+    container_name: tp2-monolith-app
+    ports:
+      - "3000:3000"
+    environment:
+      - PORT=3000
+      - NODE_ENV=production
+    restart: "no"

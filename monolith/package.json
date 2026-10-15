@@ -1,0 +1,13 @@
+{
+  "name": "tp2-monolith",
+  "version": "1.0.0",
+  "description": "Monolito modular para TP2.1 DevOps",
+  "main": "src/server.js",
+  "scripts": {
+    "start": "node src/server.js"
+  },
+  "dependencies": {
+    "express": "^4.19.2",
+    "cors": "^2.8.5"
+  }
+}

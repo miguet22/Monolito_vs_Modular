@@ -1,0 +1,13 @@
+{
+  "name": "tp2-notification-service",
+  "version": "1.0.0",
+  "description": "Microservicio independiente de notificaciones detrás de una API REST",
+  "main": "src/server.js",
+  "scripts": {
+    "start": "node src/server.js"
+  },
+  "dependencies": {
+    "express": "^4.19.2",
+    "cors": "^2.8.5"
+  }
+}

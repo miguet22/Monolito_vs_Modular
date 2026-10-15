@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TP 2.1 DevOps - Microservicios</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="container">
+    <!-- Top Navigation -->
+    <header class="top-nav">
+      <div class="brand">
+        <div class="brand-icon">🚀</div>
+        <div>
+          <h1 class="brand-title">Sistema de Pedidos - Microservicios</h1>
+          <p class="brand-subtitle">Servicios independientes en red Docker &bull; Puerto 4000</p>
+        </div>
+      </div>
+      <nav class="nav-links">
+        <a href="http://localhost:3000" target="_blank" class="nav-btn external">🏛️ Ir a Monolito (:3000) ↗</a>
+        <a href="/" class="nav-btn active">🚀 Microservicios (:4000)</a>
+      </nav>
+    </header>
+
+    <!-- Status Cards Group -->
+    <section class="status-summary-card">
+      <div class="status-group">
+        <div class="system-status">
+          <div class="status-dot pulsing" id="order-status-dot"></div>
+          <span id="order-status-text">Order-Service: <strong>ONLINE</strong> (:4000)</span>
+        </div>
+        <div class="system-status">
+          <div class="status-dot pulsing" id="notif-status-dot"></div>
+          <span id="notif-status-text">Notification-Service: <strong>ONLINE</strong> (:3001)</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- Main Grid -->
+    <div class="dashboard-grid">
+      <!-- Panel Izquierdo: Formulario y Chaos Testing -->
+      <section class="panel-card">
+        <div class="panel-header">
+          <h3 class="panel-title">🛒 Realizar Compra / Crear Pedido</h3>
+        </div>
+
+        <form id="order-form">
+          <div class="form-group">
+            <label class="form-label">Nombre del Cliente</label>
+            <input type="text" id="customer" class="form-input" required value="María González">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Producto / Servicio</label>
+            <input type="text" id="item" class="form-input" required value="Servidor Cloud Dedicado">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Monto ($ USD)</label>
+            <input type="number" id="amount" class="form-input" required value="350" min="1">
+          </div>
+          <button type="submit" class="btn-primary" id="btn-submit">
+            Ejecutar Pedido
+          </button>
+        </form>
+
+        <!-- Chaos Controls -->
+        <div class="chaos-card">
+          <h4 class="chaos-title">⚠️ Simulación de Falla</h4>
+          <p class="chaos-desc">
+            Provoca la caída del servicio de notificaciones para observar el comportamiento de pedidos.
+          </p>
+          <div class="chaos-actions">
+            <button type="button" class="btn-danger" id="btn-toggle-down">
+              💥 Simular Caída (HTTP 503)
+            </button>
+            <button type="button" class="btn-success" id="btn-restore">
+              ✨ Restaurar Servicio
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <!-- Panel Derecho: Métricas & Log Distribuido -->
+      <section class="panel-card">
+        <div class="panel-header">
+          <h3 class="panel-title">📊 Métricas del Sistema</h3>
+          <span style="font-size: 0.8rem; color: var(--text-muted);" id="orders-count-badge">0 pedidos</span>
+        </div>
+
+        <div class="metrics-row">
+          <div class="metric-box">
+            <div class="metric-value" id="metric-latency">~35 ms</div>
+            <div class="metric-label">Latencia Red HTTP</div>
+          </div>
+          <div class="metric-box">
+            <div class="metric-value" id="metric-orders">0</div>
+            <div class="metric-label">Pedidos Completados</div>
+          </div>
+          <div class="metric-box">
+            <div class="metric-value" id="metric-degraded">0</div>
+            <div class="metric-label">Degradados / Fallback</div>
+          </div>
+        </div>
+
+        <h4 style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 0.5rem; text-transform: uppercase;">
+          Terminal de Eventos
+        </h4>
+        <div class="log-terminal" id="log-terminal">
+          <div class="log-entry info">[SISTEMA] Microservicio de pedidos conectado a la red.</div>
+        </div>
+      </section>
+    </div>
+
+    <!-- Historial de Pedidos -->
+    <section class="panel-card">
+      <div class="panel-header">
+        <h3 class="panel-title">📋 Registro de Pedidos</h3>
+      </div>
+      <div class="orders-table-wrapper">
+        <table class="orders-table">
+          <thead>
+            <tr>
+              <th>ID Pedido</th>
+              <th>Cliente</th>
+              <th>Producto</th>
+              <th>Monto</th>
+              <th>Estado Pedido</th>
+              <th>Estado Notificación</th>
+              <th>Latencia HTTP</th>
+              <th>Detalle</th>
+            </tr>
+          </thead>
+          <tbody id="orders-tbody">
+            <tr>
+              <td colspan="8" style="text-align: center; color: var(--text-muted); padding: 1.5rem;">
+                Aún no hay pedidos registrados. Crea uno arriba para comenzar.
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>

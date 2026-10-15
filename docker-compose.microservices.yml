@@ -1,0 +1,35 @@
+services:
+  notification-service:
+    build:
+      context: ./microservices/notification-service
+      dockerfile: Dockerfile
+    container_name: tp2-notification-service
+    ports:
+      - "4001:3001"
+    environment:
+      - PORT=3001
+      - NODE_ENV=production
+    networks:
+      - microservices-net
+    restart: "no"
+
+  order-service:
+    build:
+      context: ./microservices/order-service
+      dockerfile: Dockerfile
+    container_name: tp2-order-service
+    ports:
+      - "4000:4000"
+    environment:
+      - PORT=4000
+      - NOTIFICATION_SERVICE_URL=http://notification-service:3001
+      - NODE_ENV=production
+    depends_on:
+      - notification-service
+    networks:
+      - microservices-net
+    restart: "no"
+
+networks:
+  microservices-net:
+    driver: bridge
